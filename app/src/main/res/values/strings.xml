@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">WatchPass</string>
+    <string name="watcher_service_name">Watcher Service</string>
+    <string name="watcher_service_detail">Watcher Accessibility Service</string>
+    <string name="password_hint">Password</string>
+    <string name="test_button_name">Test to Read Button Click</string>
 </resources>
