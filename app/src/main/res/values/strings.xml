@@ -4,4 +4,9 @@
     <string name="watcher_service_detail">Watcher Accessibility Service</string>
     <string name="password_hint">Password</string>
     <string name="test_button_name">Test to Read Button Click</string>
+    <string name="dialog_title">Use Google\'s  Accessibility Services?</string>
+    <string name="dialog_text">This app needs Accessibility Services to .... blah blah blah
+    ... After allowing services, please press back to return to this app. </string>
+    <string name="dialog_affirmative_button_text">Use</string>
+    <string name="dialog_cancel_button_text">Cancel</string>
 </resources>
