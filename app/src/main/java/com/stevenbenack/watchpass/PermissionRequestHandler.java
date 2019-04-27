@@ -13,14 +13,16 @@ import androidx.core.app.ActivityCompat;
 import java.util.List;
 
 public class PermissionRequestHandler {
+    private static final String TAG = "PermissionReqHandler";
+
     public boolean hasAccessibilityServicePermissions(Context context, Class<? extends AccessibilityService> service) {
         AccessibilityManager accessibilityManager = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
         List<AccessibilityServiceInfo> enabledServices = accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK);
 
-        for ( AccessibilityServiceInfo enabledService : enabledServices ) {
+        for (AccessibilityServiceInfo enabledService : enabledServices) {
             ServiceInfo serviceInfo = enabledService.getResolveInfo().serviceInfo;
 
-            if ( serviceInfo.packageName.equals(context.getPackageName()) && serviceInfo.name.equals(service.getName()) )
+            if (serviceInfo.packageName.equals(context.getPackageName()) && serviceInfo.name.equals(service.getName()))
                 return true;
         }
         return false;

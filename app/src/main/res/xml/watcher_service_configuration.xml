@@ -2,9 +2,11 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeAllMask"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:accessibilityFlags="flagDefault|flagIncludeNotImportantViews|flagReportViewIds|flagRequestEnhancedWebAccessibility|flagRetrieveInteractiveWindows"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
     android:canRetrieveWindowContent="true"
     android:notificationTimeout="0"
+    android:packageNames="com.stevenbenack.watchpass, com.touchtype.swiftkey.beta, com.android.inputmethod.latin"
     android:settingsActivity="com.stevenbenack.watchpass.MainActivity" />
 
     <!--android:packageNames="com.stevenbenack.watchpass"-->
+    <!--flagIncludeNotImportantViews|flagReportViewIds|flagRequestEnhancedWebAccessibility|-->

@@ -37,14 +37,12 @@ public class WatcherService extends AccessibilityService {
 //        info.eventTypes = AccessibilityEvent.TYPE_WINDOWS_CHANGED | AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
         info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
 
-        info.packageNames = new String[]{"com.stevenbenack.watchpass", "com.facebook.orca"};
+        info.packageNames = new String[]{"com.stevenbenack.watchpass", "com.touchtype.swiftkey.beta",
+                "com.android.inputmethod.latin"};
 
         info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
 
         info.flags = AccessibilityServiceInfo.DEFAULT;
-        info.flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
-        info.flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
-        info.flags = AccessibilityServiceInfo.FLAG_REQUEST_ENHANCED_WEB_ACCESSIBILITY;
         info.flags = AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
 
         info.notificationTimeout = 0;
