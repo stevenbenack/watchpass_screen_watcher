@@ -3,6 +3,7 @@ package com.stevenbenack.watchpass;
 import android.Manifest;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int EXTERNAL_WRITE_PERMISSION_CODE = 1;
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION_CODE = 2;
     private static final boolean ACCESSIBILITY_CHECK_OFF = false;       // turn off accessibility check prompt while testing
+    private static final int REQUEST_SCREENSHOT = 59706;
 
     @BindView(R.id.password_field)
     EditText passwordField;
@@ -41,12 +43,15 @@ public class MainActivity extends AppCompatActivity {
     Button floatingScreenButton;
 
     private PermissionRequestHandler permissionRequestHandler = new PermissionRequestHandler();
+    private MediaProjectionManager mgr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        mgr = (MediaProjectionManager)getSystemService(MEDIA_PROJECTION_SERVICE);
     }
 
     @Override
@@ -60,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             directory.mkdirs();
         }
 
-        screenshotButton.setOnClickListener(v -> takeScreenshot());
+        screenshotButton.setOnClickListener(v -> takeScreenshot1());
         floatingScreenButton.setOnClickListener(v -> {
             Intent i = new Intent(getApplicationContext(), DrawScreenService.class);
             startService(i);
@@ -77,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
 
         if ( !permissionRequestHandler.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ) {
             permissionRequestHandler.requestUnGrantedPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.SYSTEM_ALERT_WINDOW},
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.SYSTEM_ALERT_WINDOW,
+                                    Manifest.permission.FOREGROUND_SERVICE},
                     EXTERNAL_WRITE_PERMISSION_CODE);
         }
 
@@ -101,6 +107,26 @@ public class MainActivity extends AppCompatActivity {
         });
         permissionDialog.setNegativeButton(R.string.dialog_cancel_button_text, (dialog, which) -> dialog.dismiss());
         permissionDialog.show();
+    }
+
+    private void takeScreenshot1() {
+        startActivityForResult(mgr.createScreenCaptureIntent(), REQUEST_SCREENSHOT);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if ( requestCode == REQUEST_SCREENSHOT ) {
+            if ( resultCode == RESULT_OK ) {
+                Intent i =
+                        new Intent(this, ScreenCaptureService.class)
+                                .putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, resultCode)
+                                .putExtra(ScreenCaptureService.EXTRA_RESULT_INTENT, data);
+
+                startService(i);
+            }
+        }
+        finish();
     }
 
 
@@ -129,5 +155,4 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
 }

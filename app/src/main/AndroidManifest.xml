@@ -3,6 +3,7 @@
     package="com.stevenbenack.watchpass">
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -30,6 +31,7 @@
         </service>
 
         <service android:name=".DrawScreenService" />
+        <service android:name=".ScreenCaptureService" />
 
     </application>
 </manifest>

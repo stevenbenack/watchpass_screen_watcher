@@ -6,6 +6,10 @@ import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import org.greenrobot.eventbus.EventBus;
+
+import io.reactivex.Completable;
+
 public class WatcherService extends AccessibilityService {
     private static final String TAG = "CustomAccessibility";
 
@@ -21,6 +25,8 @@ public class WatcherService extends AccessibilityService {
         Log.d(TAG, "onAccessibilityEvent: describeContents " + source.describeContents());
         Log.d(TAG, "onAccessibilityEvent: getClassName " + source.getClassName());
         Log.d(TAG, "onAccessibilityEvent: getContentDescription " + source.getContentDescription());
+
+        EventBus.getDefault().post(new UserEvents.UserAccessibilityEvent());
     }
 
 
@@ -47,5 +53,15 @@ public class WatcherService extends AccessibilityService {
 
         info.notificationTimeout = 0;
         this.setServiceInfo(info);
+    }
+
+    public static Completable notifyAccessibilityEvent() {
+        return Completable.create(emitter -> {
+           try {
+               emitter.onComplete();
+           } catch (Exception e) {
+               emitter.onError(e);
+           }
+        });
     }
 }
