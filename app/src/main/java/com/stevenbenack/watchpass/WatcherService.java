@@ -8,8 +8,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import org.greenrobot.eventbus.EventBus;
 
-import io.reactivex.Completable;
-
 public class WatcherService extends AccessibilityService {
     private static final String TAG = "CustomAccessibility";
 
@@ -38,6 +36,7 @@ public class WatcherService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         Log.d(TAG, "onServiceConnected");
+
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
 
 //        info.eventTypes = AccessibilityEvent.TYPE_WINDOWS_CHANGED | AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED;
@@ -53,15 +52,5 @@ public class WatcherService extends AccessibilityService {
 
         info.notificationTimeout = 0;
         this.setServiceInfo(info);
-    }
-
-    public static Completable notifyAccessibilityEvent() {
-        return Completable.create(emitter -> {
-           try {
-               emitter.onComplete();
-           } catch (Exception e) {
-               emitter.onError(e);
-           }
-        });
     }
 }

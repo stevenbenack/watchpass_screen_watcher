@@ -12,4 +12,5 @@
     <string name="dialog_cancel_button_text">Cancel</string>
     <string name="screenshot_name">WatchPassScreenshot</string>
     <string name="view_draw_over_screen_text">Draw Over Screen</string>
+    <string name="virtual_screen_name">Totally Not Screenshot</string>
 </resources>
