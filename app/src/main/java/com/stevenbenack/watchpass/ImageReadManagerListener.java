@@ -30,8 +30,8 @@ import java.nio.ByteBuffer;
 public class ImageReadManagerListener implements ImageReader.OnImageAvailableListener {
     private static final String TAG = "ImageReadListener";
 
-    private int width;
-    private int height;
+    public int width;
+    public int height;
     private final ImageReader imageReader;
     private Bitmap latestBitmap;
     private boolean onDidUserEvent;
@@ -40,7 +40,7 @@ public class ImageReadManagerListener implements ImageReader.OnImageAvailableLis
      * Declaration of ImageReadManagerListener for VirtualScreenCaptureService to declare
      * We need to grab all the screen information for the virtual display
      */
-    ImageReadManagerListener(VirtualScreenCaptureService virtualScreenCaptureService) {
+    public ImageReadManagerListener(VirtualScreenCaptureService virtualScreenCaptureService) {
         this.latestBitmap = null;
         this.onDidUserEvent = false;
         Display display=virtualScreenCaptureService.getWindowManager().getDefaultDisplay();
@@ -131,7 +131,7 @@ public class ImageReadManagerListener implements ImageReader.OnImageAvailableLis
     }
 
     // Get the surface screen from the image reader
-    Surface getSurface() {
+    public Surface getSurface() {
         return(imageReader.getSurface());
     }
 
@@ -164,17 +164,5 @@ public class ImageReadManagerListener implements ImageReader.OnImageAvailableLis
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    int getWidth() {
-        return(width);
-    }
-
-    int getHeight() {
-        return(height);
-    }
-
-    void close() {
-        imageReader.close();
     }
 }

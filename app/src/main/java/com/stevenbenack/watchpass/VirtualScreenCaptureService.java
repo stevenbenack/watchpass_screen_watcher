@@ -3,7 +3,6 @@ package com.stevenbenack.watchpass;
 import android.app.Service;
 import android.content.Intent;
 import android.hardware.display.DisplayManager;
-import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Handler;
@@ -31,11 +30,9 @@ public class VirtualScreenCaptureService extends Service {
             android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
     private MediaProjection mediaProjection;
-    private VirtualDisplay virtualDisplay;
     private Handler handler;
     private MediaProjectionManager mediaProjectionManager;
     private WindowManager windowManager;
-    private ImageReadManagerListener imageReadManagerListener;
 
     // On create, start our projection of the screen and run this projection in the background (using the looper handler)
     @Override
@@ -58,15 +55,15 @@ public class VirtualScreenCaptureService extends Service {
                 (Intent)i.getParcelableExtra(EXTRA_RESULT_INTENT));
 
         // Image read manager to listen for when virtual display has an image available to screenshot
-        imageReadManagerListener = new ImageReadManagerListener(this);
+        ImageReadManagerListener imageReadManagerListener = new ImageReadManagerListener(this);
 
         /* virtual display that we project onto the user's screen. It has the same dimensions as the current user's
          * current screen; the user does not notice any difference in the projection. Based on my debugging, this does
          * consume some amount of processing power, with any reasonably new device, this will not be noticeable to the
          * user
          */
-        virtualDisplay = mediaProjection.createVirtualDisplay(getResources().getString(R.string.virtual_screen_name),
-                imageReadManagerListener.getWidth(), imageReadManagerListener.getHeight(), getResources().getDisplayMetrics().densityDpi,
+        mediaProjection.createVirtualDisplay(getResources().getString(R.string.virtual_screen_name),
+                imageReadManagerListener.width, imageReadManagerListener.height, getResources().getDisplayMetrics().densityDpi,
                 VIRTUAL_DISPLAY_FLAG, imageReadManagerListener.getSurface(), null, handler);
 
         return(START_NOT_STICKY);
@@ -75,7 +72,6 @@ public class VirtualScreenCaptureService extends Service {
     @Override
     public void onDestroy() {
         mediaProjection.stop();
-
         super.onDestroy();
     }
 
@@ -85,11 +81,11 @@ public class VirtualScreenCaptureService extends Service {
         throw new AssertionError("No Binding");
     }
 
-    WindowManager getWindowManager() {
+    public WindowManager getWindowManager() {
         return(windowManager);
     }
 
-    Handler getHandler() {
+    public Handler getHandler() {
         return(handler);
     }
 }
